@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DoodleForge | Real-Time Sketch-to-Physics Generative Creature Sandbox</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <!-- Matter.js Physics Engine CDN with local fallback -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+      <div class="brand">
+        <div class="logo-icon">⚙️</div>
+        <div class="brand-text">
+          <h1>DOODLE<span>FORGE</span></h1>
+          <p class="tagline">REAL-TIME SKETCH-TO-PHYSICS GENERATIVE CREATURE SANDBOX</p>
+        </div>
+      </div>
+      <div class="nav-controls">
+        <div class="mode-switcher">
+          <button id="btn-mode-forge" class="btn-toggle active">
+            <span class="icon">✏️</span> FORGE STUDIO
+          </button>
+          <button id="btn-mode-sandbox" class="btn-toggle">
+            <span class="icon">🌍</span> PHYSICS SANDBOX
+          </button>
+        </div>
+        <button id="btn-audio-toggle" class="btn-icon" title="Toggle Biomechanical Audio">🔊</button>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="workspace">
+      <!-- FORGE STUDIO VIEW -->
+      <section id="view-forge" class="view active">
+        <div class="studio-layout">
+          <!-- Drawing Canvas Container -->
+          <div class="canvas-wrapper">
+            <div class="canvas-header">
+              <span class="status-indicator">● BLUEPRINT CAPTURE ACTIVE</span>
+              <div class="canvas-quick-tools">
+                <button id="btn-undo" class="btn-sm">↺ Undo</button>
+                <button id="btn-clear" class="btn-sm danger">✕ Clear Canvas</button>
+              </div>
+            </div>
+            <canvas id="forge-canvas" width="900" height="600"></canvas>
+            <div class="canvas-hint">
+              Draw a central body (torso), then add legs, head, wings, tail, or wheels.
+            </div>
+          </div>
+
+          <!-- Forge Control Sidebar -->
+          <aside class="sidebar forge-sidebar">
+            <div class="panel-card">
+              <h3>🎨 Biological Brushes</h3>
+              <div class="brush-palette">
+                <button class="color-btn active" data-color="#00e5ff" style="--c:#00e5ff" title="Torso / Core"></button>
+                <button class="color-btn" data-color="#00e676" style="--c:#00e676" title="Legs / Limbs"></button>
+                <button class="color-btn" data-color="#e040fb" style="--c:#e040fb" title="Head / Sensory"></button>
+                <button class="color-btn" data-color="#ff4081" style="--c:#ff4081" title="Wings / Aerofoils"></button>
+                <button class="color-btn" data-color="#ff9100" style="--c:#ff9100" title="Tail / Counterweight"></button>
+                <button class="color-btn" data-color="#ffeb3b" style="--c:#ffeb3b" title="Wheels / Rotary"></button>
+              </div>
+              <div class="slider-group">
+                <label>Brush Width: <span id="val-brush-size">6px</span></label>
+                <input type="range" id="brush-size" min="3" max="20" value="6">
+              </div>
+            </div>
+
+            <div class="panel-card">
+              <h3>🧬 Load Creature Specimen</h3>
+              <select id="preset-select" class="dropdown-select">
+                <option value="">-- Choose Specimen Template --</option>
+                <option value="preset_cyber_cheetah">Cyber-Cheetah (Quadruped)</option>
+                <option value="preset_bipedal_strider">Bipedal Strider (Biped)</option>
+                <option value="preset_hexapod_scuttler">Hexapod Scuttler (6-Legged)</option>
+                <option value="preset_pterodactyl_flapper">Pterodactyl Flapper (Avian)</option>
+                <option value="preset_wheeled_rover">Wheeled Dune-Rover (Vehicle)</option>
+              </select>
+              <button id="btn-load-preset" class="btn-secondary">Load Specimen</button>
+            </div>
+
+            <div class="panel-card highlight-card">
+              <h3>⚙️ Rigging Synthesizer</h3>
+              <p class="card-desc">Segment strokes, detect skeletal joints, and compile 2D physics rig.</p>
+              <div class="form-group">
+                <label>Creature Name:</label>
+                <input type="text" id="creature-name-input" value="Bionic-Strider" class="text-input">
+              </div>
+              <button id="btn-auto-rig" class="btn-primary">
+                ⚡ AUTO-RIG & SPAWN IN SANDBOX
+              </button>
+            </div>
+
+            <div class="panel-card telemetry-card">
+              <h3>🔬 Anatomy Detection</h3>
+              <div id="anatomy-badges" class="badge-container">
+                <span class="badge">Awaiting sketch...</span>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- PHYSICS SANDBOX VIEW -->
+      <section id="view-sandbox" class="view">
+        <div class="sandbox-layout">
+          <!-- Matter.js Canvas Container -->
+          <div class="canvas-wrapper">
+            <div class="canvas-header">
+              <span class="status-indicator live">● MATTER.JS SIMULATION RUNNING</span>
+              <div class="sandbox-actions">
+                <button id="btn-drop-food" class="btn-sm action-btn">🍏 Drop Food Pellet</button>
+                <button id="btn-spawn-clone" class="btn-sm action-btn">👥 Spawn Clone</button>
+                <button id="btn-reset-sandbox" class="btn-sm danger">↺ Reset World</button>
+              </div>
+            </div>
+            <div id="matter-container"></div>
+            <div class="sandbox-overlay-hint">
+              Left-click to drag creatures | Right-click or button to drop food | Space to toggle slow-motion
+            </div>
+          </div>
+
+          <!-- Sandbox Controls Sidebar -->
+          <aside class="sidebar sandbox-sidebar">
+            <div class="panel-card">
+              <h3>🌍 Environment Physics</h3>
+              <div class="slider-group">
+                <label>Gravity: <span id="val-gravity">1.0G</span></label>
+                <input type="range" id="slider-gravity" min="-1" max="2.5" step="0.1" value="1.0">
+              </div>
+              <div class="slider-group">
+                <label>Gait Speed (Hz): <span id="val-gait-speed">1.6x</span></label>
+                <input type="range" id="slider-gait-speed" min="0.2" max="3.5" step="0.1" value="1.6">
+              </div>
+              <div class="slider-group">
+                <label>Motor Power: <span id="val-motor-power">1.0x</span></label>
+                <input type="range" id="slider-motor-power" min="0.1" max="2.5" step="0.1" value="1.0">
+              </div>
+              <div class="terrain-toggles">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="chk-obstacles" checked> Terrain Ramps & Obstacles
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="chk-trampoline" checked> Bouncy Trampoline
+                </label>
+              </div>
+            </div>
+
+            <div class="panel-card">
+              <h3>🧬 Evolutionary Gait Tuning</h3>
+              <p class="card-desc">Mutate joint phase offsets & frequencies to optimize velocity.</p>
+              <button id="btn-optimize-gait" class="btn-secondary">
+                🧠 EVOLVE GAIT (AI OPTIMIZE)
+              </button>
+              <div id="optimizer-status" class="subtext">Ready to optimize.</div>
+            </div>
+
+            <div class="panel-card telemetry-card">
+              <h3>📊 Telemetry HUD</h3>
+              <div class="telemetry-grid">
+                <div class="hud-item">
+                  <span class="hud-label">VELOCITY</span>
+                  <span class="hud-val" id="hud-vel">0.0 px/s</span>
+                </div>
+                <div class="hud-item">
+                  <span class="hud-label">MASS / RIG</span>
+                  <span class="hud-val" id="hud-mass">0 bodies</span>
+                </div>
+                <div class="hud-item">
+                  <span class="hud-label">GAIT STATE</span>
+                  <span class="hud-val" id="hud-gait">TROT</span>
+                </div>
+                <div class="hud-item">
+                  <span class="hud-label">ENERGY</span>
+                  <span class="hud-val highlight" id="hud-energy">100%</span>
+                </div>
+              </div>
+              <div class="blueprint-export-wrap">
+                <button id="btn-export-json" class="btn-sm btn-outline">📥 Export Blueprint JSON</button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

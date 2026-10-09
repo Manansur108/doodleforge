@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "doodleforge"
+version = "0.1.0"
+description = "Real-Time Sketch-to-Physics Generative Creature Sandbox"
+readme = "README.md"
+authors = [
+    { name = "Manan Sur", email = "manansur108@gmail.com" }
+]
+license = { text = "MIT" }
+keywords = [
+    "sketch-to-physics",
+    "generative-creatures",
+    "matter-js",
+    "canvas-api",
+    "central-pattern-generator",
+    "procedural-locomotion",
+    "rigid-body-simulation",
+    "fastapi",
+    "boids-steering",
+    "creative-ai"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Games/Entertainment :: Simulation",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.28.0",
+    "pydantic>=2.6.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "httpx>=0.27.0"
+]
+
+[project.scripts]
+doodleforge = "doodleforge.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["doodleforge*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --strict-markers"
